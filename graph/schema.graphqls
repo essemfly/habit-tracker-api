@@ -1,0 +1,93 @@
+scalar Date
+
+enum HabitStatus {
+  IDLE
+  SKIPPED
+  SUCCEED
+}
+
+enum WeekDays {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+type Habit {
+  id: ID!
+  title: String!
+  alertTime: Date
+  skipDays: [WeekDays]!
+}
+
+type HabitRecord {
+  habitId: ID!
+  date: Date!
+  status: HabitStatus!
+}
+
+type HabitRecordQueryResult {
+  habitId: ID!
+  startDate: Date!
+  endDate: Date!
+  records: [HabitRecord]!
+  totalCount: Int!
+}
+
+type User {
+  id: ID!
+  email: String!
+  name: String!
+}
+
+input CreateUserInput {
+  email: String!
+  name: String!
+  password: String!
+}
+
+input LoginUserInput {
+  email: String!
+  password: String!
+}
+
+input HistoryQueryInput {
+  habitId: String!
+  startDate: Date!
+  endDate: Date!
+}
+
+input CreateHabitInput {
+  title: String!
+  alertTime: Date
+  skipDays: [WeekDays]
+}
+
+input UpdateHabitInput {
+  id: ID!
+  title: String!
+  alertTime: Date
+  skipDays: [WeekDays]
+}
+
+input RecordInput {
+  habitId: ID!
+  date: Date!
+  status: HabitStatus!
+}
+
+type Query {
+  habits: [Habit]!
+  histories(input: HistoryQueryInput!): HabitRecordQueryResult
+}
+
+type Mutation {
+  login(input: LoginUserInput!): User
+  createUser(input: CreateUserInput!): User
+  createHabit(input: CreateHabitInput!): Habit!
+  updateHabit(input: UpdateHabitInput!): Habit!
+  updateRecord(input: RecordInput!): Boolean!
+}
