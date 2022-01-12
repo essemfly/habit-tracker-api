@@ -5,37 +5,119 @@ package graph
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log"
 
+	"github.com/lessbutter/habit-tracker-api/auth"
 	"github.com/lessbutter/habit-tracker-api/graph/generated"
 	"github.com/lessbutter/habit-tracker-api/graph/model"
+	"github.com/lessbutter/habit-tracker-api/repository"
 )
 
 func (r *mutationResolver) Login(ctx context.Context, input model.LoginUserInput) (*model.User, error) {
-	panic(fmt.Errorf("not implemented"))
+	userDao, err := repository.GetUserByEmail(input.Email)
+	if err != nil {
+		return nil, errors.New("no user found by email")
+	}
+
+	loginCorrect, err := userDao.CheckPassword(input.Password)
+	if !loginCorrect {
+		return nil, err
+	}
+
+	return userDao.ToDTO(), nil
 }
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error) {
-	panic(fmt.Errorf("not implemented"))
+	newUser, err := repository.InsertUser(input.Email, input.Password, input.Name)
+	if err != nil {
+		return nil, err
+	}
+	return newUser.ToDTO(), nil
 }
 
 func (r *mutationResolver) CreateHabit(ctx context.Context, input model.CreateHabitInput) (*model.Habit, error) {
-	panic(fmt.Errorf("not implemented"))
+	userDao := auth.ForContext(ctx)
+	if userDao == nil {
+		return nil, errors.New("invalid token")
+	}
+
+	newAlertTime := repository.Hour24Time("")
+	if input.AlertTime != nil {
+		newAlertTime = repository.ChangeDatetoHour24Time(*input.AlertTime)
+	}
+	skipDays := []repository.WeekDayEnum{}
+
+	habit, err := repository.InsertHabit(input.Title, newAlertTime, skipDays, userDao)
+	if err != nil {
+		return nil, err
+	}
+
+	return habit.ToDTO(), nil
 }
 
 func (r *mutationResolver) UpdateHabit(ctx context.Context, input model.UpdateHabitInput) (*model.Habit, error) {
-	panic(fmt.Errorf("not implemented"))
+	userDao := auth.ForContext(ctx)
+	if userDao == nil {
+		return nil, errors.New("invalid token")
+	}
+
+	habitDao, err := repository.GetHabit(input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	newAlertTime := repository.Hour24Time("")
+	if input.AlertTime != nil {
+		newAlertTime = repository.ChangeDatetoHour24Time(*input.AlertTime)
+	}
+	skipDays := []repository.WeekDayEnum{}
+
+	habitDao.AlertTime = newAlertTime
+	habitDao.SkipDays = skipDays
+	habitDao.Title = input.Title
+
+	newHabitDao, err := habitDao.Update()
+	if err != nil {
+		return nil, err
+	}
+
+	return newHabitDao.ToDTO(), nil
 }
 
 func (r *mutationResolver) UpdateRecord(ctx context.Context, input model.RecordInput) (bool, error) {
+	userDao := auth.ForContext(ctx)
+	if userDao == nil {
+		return false, errors.New("invalid token")
+	}
 	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *queryResolver) Habits(ctx context.Context) ([]*model.Habit, error) {
-	panic(fmt.Errorf("not implemented"))
+	userDao := auth.ForContext(ctx)
+	if userDao == nil {
+		return nil, errors.New("invalid token")
+	}
+	habitDaos, err := repository.ListHabits(userDao.Email)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	newHabits := []*model.Habit{}
+	for _, habitDao := range habitDaos {
+		newHabits = append(newHabits, habitDao.ToDTO())
+	}
+
+	return newHabits, nil
 }
 
 func (r *queryResolver) Histories(ctx context.Context, input model.HistoryQueryInput) (*model.HabitRecordQueryResult, error) {
+	userDao := auth.ForContext(ctx)
+	if userDao == nil {
+		return nil, errors.New("invalid token")
+	}
 	panic(fmt.Errorf("not implemented"))
 }
 

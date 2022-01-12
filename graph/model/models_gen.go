@@ -21,10 +21,10 @@ type CreateUserInput struct {
 }
 
 type Habit struct {
-	ID        string      `json:"id"`
-	Title     string      `json:"title"`
-	AlertTime *string     `json:"alertTime"`
-	SkipDays  []*WeekDays `json:"skipDays"`
+	ID        string     `json:"id"`
+	Title     string     `json:"title"`
+	AlertTime string     `json:"alertTime"`
+	SkipDays  []WeekDays `json:"skipDays"`
 }
 
 type HabitRecord struct {

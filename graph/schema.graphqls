@@ -19,8 +19,8 @@ enum WeekDays {
 type Habit {
   id: ID!
   title: String!
-  alertTime: Date
-  skipDays: [WeekDays]!
+  alertTime: Date!
+  skipDays: [WeekDays!]!
 }
 
 type HabitRecord {

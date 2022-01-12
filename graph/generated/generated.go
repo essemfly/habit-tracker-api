@@ -380,8 +380,8 @@ enum WeekDays {
 type Habit {
   id: ID!
   title: String!
-  alertTime: Date
-  skipDays: [WeekDays]!
+  alertTime: Date!
+  skipDays: [WeekDays!]!
 }
 
 type HabitRecord {
@@ -698,11 +698,14 @@ func (ec *executionContext) _Habit_alertTime(ctx context.Context, field graphql.
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalODate2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNDate2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Habit_skipDays(ctx context.Context, field graphql.CollectedField, obj *model.Habit) (ret graphql.Marshaler) {
@@ -735,9 +738,9 @@ func (ec *executionContext) _Habit_skipDays(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.WeekDays)
+	res := resTmp.([]model.WeekDays)
 	fc.Result = res
-	return ec.marshalNWeekDays2ᚕᚖgithubᚗcomᚋlessbutterᚋhabitᚑtrackerᚑapiᚋgraphᚋmodelᚐWeekDays(ctx, field.Selections, res)
+	return ec.marshalNWeekDays2ᚕgithubᚗcomᚋlessbutterᚋhabitᚑtrackerᚑapiᚋgraphᚋmodelᚐWeekDaysᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _HabitRecord_habitId(ctx context.Context, field graphql.CollectedField, obj *model.HabitRecord) (ret graphql.Marshaler) {
@@ -2861,6 +2864,9 @@ func (ec *executionContext) _Habit(ctx context.Context, sel ast.SelectionSet, ob
 			}
 		case "alertTime":
 			out.Values[i] = ec._Habit_alertTime(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "skipDays":
 			out.Values[i] = ec._Habit_skipDays(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -3553,7 +3559,17 @@ func (ec *executionContext) unmarshalNUpdateHabitInput2githubᚗcomᚋlessbutter
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNWeekDays2ᚕᚖgithubᚗcomᚋlessbutterᚋhabitᚑtrackerᚑapiᚋgraphᚋmodelᚐWeekDays(ctx context.Context, v interface{}) ([]*model.WeekDays, error) {
+func (ec *executionContext) unmarshalNWeekDays2githubᚗcomᚋlessbutterᚋhabitᚑtrackerᚑapiᚋgraphᚋmodelᚐWeekDays(ctx context.Context, v interface{}) (model.WeekDays, error) {
+	var res model.WeekDays
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNWeekDays2githubᚗcomᚋlessbutterᚋhabitᚑtrackerᚑapiᚋgraphᚋmodelᚐWeekDays(ctx context.Context, sel ast.SelectionSet, v model.WeekDays) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNWeekDays2ᚕgithubᚗcomᚋlessbutterᚋhabitᚑtrackerᚑapiᚋgraphᚋmodelᚐWeekDaysᚄ(ctx context.Context, v interface{}) ([]model.WeekDays, error) {
 	var vSlice []interface{}
 	if v != nil {
 		if tmp1, ok := v.([]interface{}); ok {
@@ -3563,10 +3579,10 @@ func (ec *executionContext) unmarshalNWeekDays2ᚕᚖgithubᚗcomᚋlessbutter�
 		}
 	}
 	var err error
-	res := make([]*model.WeekDays, len(vSlice))
+	res := make([]model.WeekDays, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalOWeekDays2ᚖgithubᚗcomᚋlessbutterᚋhabitᚑtrackerᚑapiᚋgraphᚋmodelᚐWeekDays(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNWeekDays2githubᚗcomᚋlessbutterᚋhabitᚑtrackerᚑapiᚋgraphᚋmodelᚐWeekDays(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -3574,7 +3590,7 @@ func (ec *executionContext) unmarshalNWeekDays2ᚕᚖgithubᚗcomᚋlessbutter�
 	return res, nil
 }
 
-func (ec *executionContext) marshalNWeekDays2ᚕᚖgithubᚗcomᚋlessbutterᚋhabitᚑtrackerᚑapiᚋgraphᚋmodelᚐWeekDays(ctx context.Context, sel ast.SelectionSet, v []*model.WeekDays) graphql.Marshaler {
+func (ec *executionContext) marshalNWeekDays2ᚕgithubᚗcomᚋlessbutterᚋhabitᚑtrackerᚑapiᚋgraphᚋmodelᚐWeekDaysᚄ(ctx context.Context, sel ast.SelectionSet, v []model.WeekDays) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -3598,7 +3614,7 @@ func (ec *executionContext) marshalNWeekDays2ᚕᚖgithubᚗcomᚋlessbutterᚋh
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOWeekDays2ᚖgithubᚗcomᚋlessbutterᚋhabitᚑtrackerᚑapiᚋgraphᚋmodelᚐWeekDays(ctx, sel, v[i])
+			ret[i] = ec.marshalNWeekDays2githubᚗcomᚋlessbutterᚋhabitᚑtrackerᚑapiᚋgraphᚋmodelᚐWeekDays(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -3608,6 +3624,12 @@ func (ec *executionContext) marshalNWeekDays2ᚕᚖgithubᚗcomᚋlessbutterᚋh
 
 	}
 	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
 
 	return ret
 }
