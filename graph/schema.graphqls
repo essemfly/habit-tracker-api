@@ -89,5 +89,5 @@ type Mutation {
   createUser(input: CreateUserInput!): User
   createHabit(input: CreateHabitInput!): Habit!
   updateHabit(input: UpdateHabitInput!): Habit!
-  updateRecord(input: RecordInput!): Boolean!
+  upsertRecord(input: RecordInput!): Boolean!
 }

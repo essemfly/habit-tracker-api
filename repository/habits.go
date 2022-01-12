@@ -9,30 +9,15 @@ import (
 	"github.com/lessbutter/habit-tracker-api/graph/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type HabitStatusEnum string
-type WeekDayEnum string
-type Hour24Time string
-
-func ChangeDatetoHour24Time(date string) Hour24Time {
-	return Hour24Time("13")
-}
 
 const (
 	IDLE    = HabitStatusEnum("IDLE")
 	SKIPPED = HabitStatusEnum("SKIPPED")
 	SUCCEED = HabitStatusEnum("SUCCEED")
-)
-
-const (
-	MONDAY    = WeekDayEnum("MONDAY")
-	TUESDAY   = WeekDayEnum("TUESDAY")
-	WEDNESDAY = WeekDayEnum("WEDNESDAY")
-	THURSDAY  = WeekDayEnum("THURSDAY")
-	FRIDAY    = WeekDayEnum("FRIDAY")
-	SATURDAY  = WeekDayEnum("SATURDAY")
-	SUNDAY    = WeekDayEnum("SUNDAY")
 )
 
 type HabitDAO struct {
@@ -46,24 +31,9 @@ type HabitDAO struct {
 }
 
 func (habitDao *HabitDAO) ToDTO() *model.Habit {
-
 	skipdays := []model.WeekDays{}
 	for _, day := range habitDao.SkipDays {
-		if day == MONDAY {
-			skipdays = append(skipdays, model.WeekDaysMonday)
-		} else if day == TUESDAY {
-			skipdays = append(skipdays, model.WeekDaysTuesday)
-		} else if day == WEDNESDAY {
-			skipdays = append(skipdays, model.WeekDaysWednesday)
-		} else if day == THURSDAY {
-			skipdays = append(skipdays, model.WeekDaysThursday)
-		} else if day == FRIDAY {
-			skipdays = append(skipdays, model.WeekDaysFriday)
-		} else if day == SATURDAY {
-			skipdays = append(skipdays, model.WeekDaysSaturday)
-		} else if day == SUNDAY {
-			skipdays = append(skipdays, model.WeekDaysSunday)
-		}
+		skipdays = append(skipdays, day.ToDTO())
 	}
 	return &model.Habit{
 		ID:        habitDao.ID.Hex(),
@@ -159,15 +129,81 @@ func ListHabits(email string) ([]*HabitDAO, error) {
 	return habitDaos, nil
 }
 
-type HabitRecordsDAO struct {
+type HabitRecordDAO struct {
 	ID        primitive.ObjectID `bson:"_id, omitempty"`
 	Habit     *HabitDAO
-	Date      WeekDayEnum
+	Date      time.Time
 	Status    HabitStatusEnum
-	CreatedAt time.Time
 	UpdatedAt time.Time
 }
 
-func (recordDao *HabitRecordsDAO) ToDTO() *model.Habit {
-	return nil
+func InsertHabitRecord(record *HabitRecordDAO) (*HabitRecordDAO, error) {
+	c := config.Db.Collection("records")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	record.ID = primitive.NewObjectID()
+	_, err := c.InsertOne(ctx, record)
+	if err != nil {
+		log.Println("error on insert record", err)
+		return nil, err
+	}
+
+	return record, nil
+}
+
+func UpsertHabitRecord(record *HabitRecordDAO) (*HabitRecordDAO, error) {
+	c := config.Db.Collection("records")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	opts := options.Update().SetUpsert(true)
+
+	filter := bson.M{"habit._id": record.Habit.ID, "date": record.Date}
+
+	if _, err := c.UpdateOne(ctx, filter, bson.M{"$set": &record}, opts); err != nil {
+		log.Println("err occured on upsert record", err)
+		return nil, err
+	}
+
+	return record, nil
+}
+
+func ListHabitRecords(habitID string, start, end ExactDate) ([]*HabitRecordDAO, error) {
+	c := config.Db.Collection("records")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	habitOID, _ := primitive.ObjectIDFromHex(habitID)
+	filter := bson.M{
+		"habit._id": habitOID,
+		"date": bson.M{
+			"$gte": ChangeExactDateToServerDate(start),
+			"$lt":  ChangeExactDateToServerDate(end),
+		},
+	}
+
+	options := options.Find()
+	options.SetSort(bson.D{{Key: "date", Value: 1}})
+
+	cursor, err := c.Find(ctx, filter, options)
+	if err != nil {
+		return nil, err
+	}
+
+	records := []*HabitRecordDAO{}
+	err = cursor.All(ctx, &records)
+	if err != nil {
+		return nil, err
+	}
+
+	return records, nil
+}
+
+func (recordDao *HabitRecordDAO) ToDTO() *model.HabitRecord {
+	exactDate := ChangeServerDateToExactDate(recordDao.Date)
+	return &model.HabitRecord{
+		HabitID: recordDao.Habit.ID.Hex(),
+		Status:  model.HabitStatus(recordDao.Status),
+		Date:    ChangeExactDateToClientDate(exactDate),
+	}
 }

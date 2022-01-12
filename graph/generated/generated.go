@@ -69,7 +69,7 @@ type ComplexityRoot struct {
 		CreateUser   func(childComplexity int, input model.CreateUserInput) int
 		Login        func(childComplexity int, input model.LoginUserInput) int
 		UpdateHabit  func(childComplexity int, input model.UpdateHabitInput) int
-		UpdateRecord func(childComplexity int, input model.RecordInput) int
+		UpsertRecord func(childComplexity int, input model.RecordInput) int
 	}
 
 	Query struct {
@@ -89,7 +89,7 @@ type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error)
 	CreateHabit(ctx context.Context, input model.CreateHabitInput) (*model.Habit, error)
 	UpdateHabit(ctx context.Context, input model.UpdateHabitInput) (*model.Habit, error)
-	UpdateRecord(ctx context.Context, input model.RecordInput) (bool, error)
+	UpsertRecord(ctx context.Context, input model.RecordInput) (bool, error)
 }
 type QueryResolver interface {
 	Habits(ctx context.Context) ([]*model.Habit, error)
@@ -243,17 +243,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateHabit(childComplexity, args["input"].(model.UpdateHabitInput)), true
 
-	case "Mutation.updateRecord":
-		if e.complexity.Mutation.UpdateRecord == nil {
+	case "Mutation.upsertRecord":
+		if e.complexity.Mutation.UpsertRecord == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_updateRecord_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_upsertRecord_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateRecord(childComplexity, args["input"].(model.RecordInput)), true
+		return e.complexity.Mutation.UpsertRecord(childComplexity, args["input"].(model.RecordInput)), true
 
 	case "Query.habits":
 		if e.complexity.Query.Habits == nil {
@@ -450,7 +450,7 @@ type Mutation {
   createUser(input: CreateUserInput!): User
   createHabit(input: CreateHabitInput!): Habit!
   updateHabit(input: UpdateHabitInput!): Habit!
-  updateRecord(input: RecordInput!): Boolean!
+  upsertRecord(input: RecordInput!): Boolean!
 }
 `, BuiltIn: false},
 }
@@ -520,7 +520,7 @@ func (ec *executionContext) field_Mutation_updateHabit_args(ctx context.Context,
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_updateRecord_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_upsertRecord_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 model.RecordInput
@@ -1185,7 +1185,7 @@ func (ec *executionContext) _Mutation_updateHabit(ctx context.Context, field gra
 	return ec.marshalNHabit2ᚖgithubᚗcomᚋlessbutterᚋhabitᚑtrackerᚑapiᚋgraphᚋmodelᚐHabit(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_updateRecord(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_upsertRecord(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1202,7 +1202,7 @@ func (ec *executionContext) _Mutation_updateRecord(ctx context.Context, field gr
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_updateRecord_args(ctx, rawArgs)
+	args, err := ec.field_Mutation_upsertRecord_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -1210,7 +1210,7 @@ func (ec *executionContext) _Mutation_updateRecord(ctx context.Context, field gr
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateRecord(rctx, args["input"].(model.RecordInput))
+		return ec.resolvers.Mutation().UpsertRecord(rctx, args["input"].(model.RecordInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2996,8 +2996,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "updateRecord":
-			out.Values[i] = ec._Mutation_updateRecord(ctx, field)
+		case "upsertRecord":
+			out.Values[i] = ec._Mutation_upsertRecord(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/lessbutter/habit-tracker-api/auth"
 	"github.com/lessbutter/habit-tracker-api/graph/generated"
@@ -86,12 +87,28 @@ func (r *mutationResolver) UpdateHabit(ctx context.Context, input model.UpdateHa
 	return newHabitDao.ToDTO(), nil
 }
 
-func (r *mutationResolver) UpdateRecord(ctx context.Context, input model.RecordInput) (bool, error) {
+func (r *mutationResolver) UpsertRecord(ctx context.Context, input model.RecordInput) (bool, error) {
 	userDao := auth.ForContext(ctx)
 	if userDao == nil {
 		return false, errors.New("invalid token")
 	}
-	panic(fmt.Errorf("not implemented"))
+
+	habitDao, _ := repository.GetHabit(input.HabitID)
+
+	exactDate := repository.ChangeClientDateToExactDate(input.Date)
+	newRecord := &repository.HabitRecordDAO{
+		Habit:     habitDao,
+		Date:      repository.ChangeExactDateToServerDate(exactDate),
+		Status:    repository.HabitStatusEnum(input.Status),
+		UpdatedAt: time.Now(),
+	}
+
+	newRecord, err := repository.UpsertHabitRecord(newRecord)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
 
 func (r *queryResolver) Habits(ctx context.Context) ([]*model.Habit, error) {
@@ -118,6 +135,7 @@ func (r *queryResolver) Histories(ctx context.Context, input model.HistoryQueryI
 	if userDao == nil {
 		return nil, errors.New("invalid token")
 	}
+
 	panic(fmt.Errorf("not implemented"))
 }
 
