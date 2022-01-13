@@ -31,26 +31,16 @@ func main() {
 			"http://127.0.0.1:3000",
 			"http://localhost:3000",
 		},
-		AllowCredentials: true,
-		AllowedHeaders:   []string{"content-type"},
-		Debug:            true,
+		// AllowCredentials: true,
+		AllowedHeaders: []string{"Access-Control-Allow-Origin", "Content-Type"},
+		Debug:          true,
 	}).Handler)
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
-	// srv.AddTransport(&transport.Websocket{
-	// 	Upgrader: websocket.Upgrader{
-	// 		CheckOrigin: func(r *http.Request) bool {
-	// 			// Check against your desired domains here
-	// 			return r.Host == "localhost:8080"
-	// 		},
-	// 		ReadBufferSize:  1024,
-	// 		WriteBufferSize: 1024,
-	// 	},
-	// })
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
+	router.Handle("/", playground.Handler("GraphQL playground", "/query"))
+	router.Handle("/query", srv)
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", conf.PORT)
-	log.Fatal(http.ListenAndServe(":"+conf.PORT, nil))
+	log.Fatal(http.ListenAndServe(":"+conf.PORT, router))
 }
