@@ -85,7 +85,7 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	Login(ctx context.Context, input model.LoginUserInput) (*model.User, error)
+	Login(ctx context.Context, input model.LoginUserInput) (string, error)
 	CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error)
 	CreateHabit(ctx context.Context, input model.CreateHabitInput) (*model.Habit, error)
 	UpdateHabit(ctx context.Context, input model.UpdateHabitInput) (*model.Habit, error)
@@ -446,7 +446,7 @@ type Query {
 }
 
 type Mutation {
-  login(input: LoginUserInput!): User
+  login(input: LoginUserInput!): String!
   createUser(input: CreateUserInput!): User
   createHabit(input: CreateHabitInput!): Habit!
   updateHabit(input: UpdateHabitInput!): Habit!
@@ -1055,11 +1055,14 @@ func (ec *executionContext) _Mutation_login(ctx context.Context, field graphql.C
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.User)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋlessbutterᚋhabitᚑtrackerᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2984,6 +2987,9 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = graphql.MarshalString("Mutation")
 		case "login":
 			out.Values[i] = ec._Mutation_login(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "createUser":
 			out.Values[i] = ec._Mutation_createUser(ctx, field)
 		case "createHabit":

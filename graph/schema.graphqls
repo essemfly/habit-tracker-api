@@ -85,7 +85,7 @@ type Query {
 }
 
 type Mutation {
-  login(input: LoginUserInput!): User
+  login(input: LoginUserInput!): String!
   createUser(input: CreateUserInput!): User
   createHabit(input: CreateHabitInput!): Habit!
   updateHabit(input: UpdateHabitInput!): Habit!

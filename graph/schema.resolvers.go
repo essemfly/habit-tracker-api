@@ -16,18 +16,22 @@ import (
 	"github.com/lessbutter/habit-tracker-api/repository"
 )
 
-func (r *mutationResolver) Login(ctx context.Context, input model.LoginUserInput) (*model.User, error) {
+func (r *mutationResolver) Login(ctx context.Context, input model.LoginUserInput) (string, error) {
 	userDao, err := repository.GetUserByEmail(input.Email)
 	if err != nil {
-		return nil, errors.New("no user found by email")
+		return "", errors.New("no user found by email")
 	}
 
 	loginCorrect, err := userDao.CheckPassword(input.Password)
 	if !loginCorrect {
-		return nil, err
+		return "", err
 	}
 
-	return userDao.ToDTO(), nil
+	token, err := auth.GenerateToken(input.Email)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
 }
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error) {
