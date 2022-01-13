@@ -35,6 +35,11 @@ func (r *mutationResolver) Login(ctx context.Context, input model.LoginUserInput
 }
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error) {
+	_, err := repository.GetUserByEmail(input.Email)
+	if err == nil {
+		return nil, errors.New("duplicate email")
+	}
+
 	newUser, err := repository.InsertUser(input.Email, input.Password, input.Name)
 	if err != nil {
 		return nil, err

@@ -64,15 +64,10 @@ func InsertUser(email, password, name string) (*UserDAO, error) {
 }
 
 func (userDao *UserDAO) CheckPassword(password string) (bool, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		log.Println("error on hashing password")
-		return false, err
-	}
+	err := bcrypt.CompareHashAndPassword([]byte(userDao.Password), []byte(password))
 
-	err = bcrypt.CompareHashAndPassword(hash, []byte(userDao.Password))
 	if err != nil {
-		log.Println("hash error on password")
+		log.Println("hash error on password: ", err)
 		return false, err
 	}
 	return true, nil
