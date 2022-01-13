@@ -32,6 +32,7 @@ func main() {
 			"http://localhost:3000",
 		},
 		AllowCredentials: true,
+		AllowedHeaders:   []string{"content-type"},
 		Debug:            true,
 	}).Handler)
 
