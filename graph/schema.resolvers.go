@@ -6,7 +6,6 @@ package graph
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
@@ -153,7 +152,35 @@ func (r *queryResolver) Histories(ctx context.Context, input model.HistoryQueryI
 		return nil, errors.New("invalid token")
 	}
 
-	panic(fmt.Errorf("not implemented"))
+	habitDao, err := repository.GetHabit(input.HabitID)
+	if err != nil {
+		return nil, errors.New("invalid habit id")
+	}
+	if habitDao.User.ID != userDao.ID {
+		return nil, errors.New("not your habit")
+	}
+
+	startExactDate := repository.ChangeClientDateToExactDate(input.StartDate)
+	endExactDate := repository.ChangeClientDateToExactDate(input.EndDate)
+	recordDaos, err := repository.ListHabitRecords(input.HabitID, startExactDate, endExactDate)
+	if err != nil {
+		return nil, err
+	}
+
+	records := []*model.HabitRecord{}
+
+	for _, dao := range recordDaos {
+		records = append(records, dao.ToDTO())
+	}
+
+	ret := model.HabitRecordQueryResult{
+		HabitID:   input.HabitID,
+		StartDate: input.StartDate,
+		EndDate:   input.EndDate,
+		Records:   records,
+	}
+
+	return &ret, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

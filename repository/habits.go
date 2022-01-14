@@ -162,7 +162,6 @@ func UpsertHabitRecord(record *HabitRecordDAO) (*HabitRecordDAO, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	log.Println("record date", record.Date)
 	filter := bson.M{"habit._id": record.Habit.ID, "date": record.Date}
 
 	var habbitRecord *HabitRecordDAO
@@ -198,7 +197,7 @@ func ListHabitRecords(habitID string, start, end ExactDate) ([]*HabitRecordDAO, 
 		"habit._id": habitOID,
 		"date": bson.M{
 			"$gte": ChangeExactDateToServerDate(start),
-			"$lt":  ChangeExactDateToServerDate(end),
+			"$lte": ChangeExactDateToServerDate(end),
 		},
 	}
 
