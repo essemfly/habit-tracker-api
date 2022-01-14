@@ -32,8 +32,8 @@ func ParseToken(tokenStr string) (string, error) {
 		return SecretKey, nil
 	})
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		userID := claims["userid"].(string)
-		return userID, nil
+		email := claims["email"].(string)
+		return email, nil
 	} else {
 		return "", errors.New("token expired or incorrect")
 	}
