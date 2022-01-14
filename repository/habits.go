@@ -33,6 +33,7 @@ type HabitDAO struct {
 func (habitDao *HabitDAO) ToDTO() *model.Habit {
 	skipdays := []model.WeekDays{}
 	for _, day := range habitDao.SkipDays {
+		log.Println("my day", day, "AFTER", day.ToDTO())
 		skipdays = append(skipdays, day.ToDTO())
 	}
 	return &model.Habit{
@@ -92,7 +93,11 @@ func (habitDao *HabitDAO) Update() (*HabitDAO, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	_, err := c.UpdateByID(ctx, habitDao.ID, habitDao)
+	_, err := c.UpdateByID(ctx, habitDao.ID, bson.M{"$set": bson.M{
+		"title":     habitDao.Title,
+		"alerttime": habitDao.AlertTime,
+		"skipdays":  habitDao.SkipDays,
+	}})
 	if err != nil {
 		log.Println("error update habit")
 		return nil, err
@@ -156,11 +161,26 @@ func UpsertHabitRecord(record *HabitRecordDAO) (*HabitRecordDAO, error) {
 	c := config.Db.Collection("records")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	opts := options.Update().SetUpsert(true)
 
+	log.Println("record date", record.Date)
 	filter := bson.M{"habit._id": record.Habit.ID, "date": record.Date}
 
-	if _, err := c.UpdateOne(ctx, filter, bson.M{"$set": &record}, opts); err != nil {
+	var habbitRecord *HabitRecordDAO
+	if err := c.FindOne(ctx, filter).Decode(&habbitRecord); err != nil {
+		record.ID = primitive.NewObjectID()
+		_, err = c.InsertOne(ctx, record)
+		if err != nil {
+			return nil, err
+		}
+		return record, nil
+	}
+
+	record.ID = primitive.NilObjectID
+	if _, err := c.UpdateOne(ctx, filter, bson.M{"$set": bson.M{
+		"date":   record.Date,
+		"habit":  record.Habit,
+		"status": record.Status,
+	}}); err != nil {
 		log.Println("err occured on upsert record", err)
 		return nil, err
 	}

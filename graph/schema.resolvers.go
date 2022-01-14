@@ -53,11 +53,15 @@ func (r *mutationResolver) CreateHabit(ctx context.Context, input model.CreateHa
 		return nil, errors.New("invalid token")
 	}
 
-	newAlertTime := repository.Hour24Time("")
+	newAlertTime := repository.Hour24Time(*input.AlertTime)
 	if input.AlertTime != nil {
 		newAlertTime = repository.ChangeDatetoHour24Time(*input.AlertTime)
 	}
+
 	skipDays := []repository.WeekDayEnum{}
+	for _, day := range input.SkipDays {
+		skipDays = append(skipDays, repository.WeekDayEnum(*day))
+	}
 
 	habit, err := repository.InsertHabit(input.Title, newAlertTime, skipDays, userDao)
 	if err != nil {
@@ -82,7 +86,11 @@ func (r *mutationResolver) UpdateHabit(ctx context.Context, input model.UpdateHa
 	if input.AlertTime != nil {
 		newAlertTime = repository.ChangeDatetoHour24Time(*input.AlertTime)
 	}
+
 	skipDays := []repository.WeekDayEnum{}
+	for _, day := range input.SkipDays {
+		skipDays = append(skipDays, repository.WeekDayEnum(*day))
+	}
 
 	habitDao.AlertTime = newAlertTime
 	habitDao.SkipDays = skipDays

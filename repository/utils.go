@@ -83,19 +83,19 @@ func ChangeWeekDayToWeekDayEnum(day model.WeekDays) WeekDayEnum {
 }
 
 func (weekdayEnum WeekDayEnum) ToDTO() model.WeekDays {
-	if weekdayEnum == MONDAY {
+	if weekdayEnum == "MONDAY" {
 		return model.WeekDaysMonday
-	} else if weekdayEnum == TUESDAY {
+	} else if weekdayEnum == "TUESDAY" {
 		return model.WeekDaysTuesday
-	} else if weekdayEnum == WEDNESDAY {
+	} else if weekdayEnum == "WEDNESDAY" {
 		return model.WeekDaysWednesday
-	} else if weekdayEnum == THURSDAY {
+	} else if weekdayEnum == "THURSDAY" {
 		return model.WeekDaysThursday
-	} else if weekdayEnum == FRIDAY {
+	} else if weekdayEnum == "FRIDAY" {
 		return model.WeekDaysFriday
-	} else if weekdayEnum == SATURDAY {
+	} else if weekdayEnum == "SATURDAY" {
 		return model.WeekDaysSaturday
-	} else if weekdayEnum == SUNDAY {
+	} else if weekdayEnum == "SUNDAY" {
 		return model.WeekDaysSunday
 	}
 	return ""
