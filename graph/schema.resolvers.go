@@ -167,17 +167,18 @@ func (r *queryResolver) Histories(ctx context.Context, input model.HistoryQueryI
 		return nil, err
 	}
 
+	totalCounts, _ := repository.GetTotalCounts(input.HabitID)
 	records := []*model.HabitRecord{}
-
 	for _, dao := range recordDaos {
 		records = append(records, dao.ToDTO())
 	}
 
 	ret := model.HabitRecordQueryResult{
-		HabitID:   input.HabitID,
-		StartDate: input.StartDate,
-		EndDate:   input.EndDate,
-		Records:   records,
+		HabitID:    input.HabitID,
+		StartDate:  input.StartDate,
+		EndDate:    input.EndDate,
+		Records:    records,
+		TotalCount: totalCounts,
 	}
 
 	return &ret, nil

@@ -218,6 +218,25 @@ func ListHabitRecords(habitID string, start, end ExactDate) ([]*HabitRecordDAO, 
 	return records, nil
 }
 
+func GetTotalCounts(habitID string) (int, error) {
+	c := config.Db.Collection("records")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	habitOID, _ := primitive.ObjectIDFromHex(habitID)
+	filter := bson.M{
+		"habit._id": habitOID,
+		"statis":    "SUCCEED",
+	}
+
+	totalCounts, err := c.CountDocuments(ctx, filter)
+	if err != nil {
+		return 0, err
+	}
+
+	return int(totalCounts), nil
+}
+
 func (recordDao *HabitRecordDAO) ToDTO() *model.HabitRecord {
 	exactDate := ChangeServerDateToExactDate(recordDao.Date)
 	return &model.HabitRecord{
