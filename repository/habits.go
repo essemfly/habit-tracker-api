@@ -226,7 +226,7 @@ func GetTotalCounts(habitID string) (int, error) {
 	habitOID, _ := primitive.ObjectIDFromHex(habitID)
 	filter := bson.M{
 		"habit._id": habitOID,
-		"statis":    "SUCCEED",
+		"status":    "SUCCEED",
 	}
 
 	totalCounts, err := c.CountDocuments(ctx, filter)
